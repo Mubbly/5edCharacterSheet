@@ -47,7 +47,6 @@ def add_level(char_data: CharData) -> CharData:
             break
 
     new_char_data["level"] = level
-
     return new_char_data
 
 
@@ -88,5 +87,44 @@ def add_ability_modifiers(char_data: CharData) -> CharData:
     return new_char_data
 
 
+def add_saving_throws(char_data: CharData) -> CharData:
+    # as = ability scores
+    as_keys = ("str", "dex", "con", "int", "wis", "cha")
+    mod_keys = tuple([key + "_modifier" for key in as_keys])
+    saving_throw_keys = tuple([key + "_saving_throw" for key in as_keys])
+
+    for key in mod_keys:
+        assert key in char_data.keys()
+    new_char_data = deepcopy(char_data)
+
+    for i in range(len(as_keys)):
+        mod_key = mod_keys[i]
+        saving_throw_key = saving_throw_keys[i]
+        new_char_data[saving_throw_key] = \
+            new_char_data[mod_key]
+
+    char_class = new_char_data["character_class"]
+    bonus_stats = char_class.saving_throw_bonuses
+    prof_bonus = new_char_data["prof_bonus"]
+
+    for stat in bonus_stats:
+        saving_throw_key = stat + "_saving_throw"
+        new_char_data[saving_throw_key] += prof_bonus
+
+    return new_char_data
+
+
+def build_character(char_data: CharData) -> CharData:
+    return pipe(
+        char_data,
+        add_level,
+        add_prof_bonus,
+        add_ability_modifiers,
+        add_saving_throws
+        # todo
+    )
+
+
 if __name__ == '__main__':
-    pass
+    from pprint import pprint
+    pprint(build_character(character_data))

@@ -44,3 +44,54 @@ class MyTests(unittest.TestCase):
 
         for real, expected in real_and_expected:
             self.assertEqual(real, expected)
+
+    def test_add_ability_modifiers(self):
+        test_data1 = {
+            "str": 12,
+            "dex": 13,
+            "con": 11,
+            "int": 16,
+            "wis": 18,
+            "cha": 13
+        }
+
+        expected_result1 = dict(
+            test_data1,
+            **{
+                "str_modifier": 1,
+                "dex_modifier": 1,
+                "con_modifier": 0,
+                "int_modifier": 3,
+                "wis_modifier": 4,
+                "cha_modifier": 1
+            }
+        )
+
+        test_data2 = {
+            "str": 15,
+            "dex": 11,
+            "con": 13,
+            "int": 17,
+            "wis": 14,
+            "cha": 15
+        }
+
+        expected_result2 = dict(
+            test_data2,
+            **{
+                "str_modifier": 2,
+                "dex_modifier": 0,
+                "con_modifier": 1,
+                "int_modifier": 3,
+                "wis_modifier": 2,
+                "cha_modifier": 2
+            }
+        )
+
+        real_and_expected = (
+            (add_ability_modifiers(test_data1), expected_result1),
+            (add_ability_modifiers(test_data2), expected_result2)
+        )
+
+        for real, expected in real_and_expected:
+            self.assertEqual(real, expected)

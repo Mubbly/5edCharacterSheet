@@ -1,6 +1,32 @@
-class CharacterClass:
-    def __init__(self, hp_per_level):
-        self.hp_per_level = hp_per_level
+from collections import namedtuple
 
 
-bard = CharacterClass(8)
+CharacterClass = namedtuple(
+    "CharacterClass",
+    ["hp_per_level", "saving_throw_bonuses"]
+)
+
+barbarian = \
+    CharacterClass(12, ("str", "con"))
+bard = \
+    CharacterClass(8, ("dex", "cha"))
+cleric = \
+    CharacterClass(8, ("wis", "cha"))
+druid = \
+    CharacterClass(8, ("int", "wis"))
+fighter = \
+    CharacterClass(10, ("str", "con"))
+monk = \
+    CharacterClass(8, ("str", "dex"))
+paladin = \
+    CharacterClass(10, ("wis", "cha"))
+ranger = \
+    CharacterClass(10, ("str", "dex"))
+rouge = \
+    CharacterClass(8, ("dex", "int"))
+sorcerer = \
+    CharacterClass(6, ("con", "cha"))
+warlock = \
+    CharacterClass(8, ("wis", "cha"))
+wizard = \
+    CharacterClass(6, ("int", "wis"))
