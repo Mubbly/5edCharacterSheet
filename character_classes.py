@@ -4,6 +4,7 @@ from collections import namedtuple
 CharacterClass = namedtuple(
     "CharacterClass",
     ["hp_per_level", "saving_throw_bonuses"]
+    # TODO: code skills for classes
 )
 
 barbarian = \

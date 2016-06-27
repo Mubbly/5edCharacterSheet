@@ -47,12 +47,14 @@ class MyTests(unittest.TestCase):
 
     def test_add_ability_modifiers(self):
         test_data1 = {
-            "str": 12,
-            "dex": 13,
-            "con": 11,
-            "int": 16,
-            "wis": 18,
-            "cha": 13
+            "abilities": {
+                "str": 12,
+                "dex": 13,
+                "con": 11,
+                "int": 16,
+                "wis": 18,
+                "cha": 13
+            }
         }
 
         expected_result1 = dict(
@@ -68,12 +70,14 @@ class MyTests(unittest.TestCase):
         )
 
         test_data2 = {
-            "str": 15,
-            "dex": 11,
-            "con": 13,
-            "int": 17,
-            "wis": 14,
-            "cha": 15
+            "abilities": {
+                "str": 15,
+                "dex": 11,
+                "con": 13,
+                "int": 17,
+                "wis": 14,
+                "cha": 15
+            }
         }
 
         expected_result2 = dict(
