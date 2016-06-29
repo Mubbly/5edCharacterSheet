@@ -1,183 +1,204 @@
-from copy import deepcopy
 from character_classes import *
-from typing import Dict, Union
-
-_CharDataValues = Union[str, CharacterClass, int]
-CharData = Dict[str, _CharDataValues]
-
-character_data = {
-    "name": "Midnight",
-    "character_class": bard,
-    "experience_points": 0,
-    "abilities": {
-        "str": 10,
-        "dex": 10,
-        "con": 10,
-        "int": 10,
-        "wis": 10,
-        "cha": 10
-    },
-    "skill_profs": ("performance", "deception", "investigation")
-}
+from collections import namedtuple
 
 
-def pipe(init_input, *args):
-    value = init_input
-    for func in args:
-        value = func(value)
-    return value
+ABILITIES = ("str", "dex", "con", "int", "wis", "cha")
 
 
-def add_level(char_data: CharData) -> CharData:
-    assert "experience_points" in char_data.keys()
-    new_char_data = deepcopy(char_data)
+InitialCharacterData = namedtuple(
+    "InitialCharacterData",
+    [
+        "name",
+        "character_class",
+        "ability_scores",
+        "experience_points",
+        "skill_profs"
+    ]
+)
 
-    xp = new_char_data["experience_points"]
 
+CharacterData = namedtuple(
+    "CharacterData",
+    [
+        "name",
+        "character_class",
+        "ability_scores",
+        "experience_points",
+        "skill_profs",
+        "level",
+        "proficiency_bonus",
+        "ability_modifiers",
+        "saving_throws",
+        "skills"
+    ]
+)
+
+
+AbilityScores = namedtuple(
+    "AbilityScores",
+    ABILITIES
+)
+
+
+AbilityModifiers = namedtuple(
+    "AbilityModifiers",
+    ABILITIES
+)
+
+
+SavingThrows = namedtuple(
+    "SavingThrows",
+    ABILITIES
+)
+
+
+SkillScores = namedtuple(
+    "SkillScores",
+    [
+        "acrobatics",
+        "animal_handling",
+        "arcana",
+        "athletics",
+        "deception",
+        "history",
+        "insight",
+        "intimidation",
+        "investigation",
+        "medicine",
+        "nature",
+        "perception",
+        "performance",
+        "persuasion",
+        "religion",
+        "sleight_of_hand",
+        "stealth",
+        "survival"
+    ]
+)
+
+
+def calc_level(xp: int) -> int:
     leveling_points = (
         0, 300, 900, 2700, 6500,
         14000, 23000, 34000, 48000, 64000,
         85000, 100000, 120000, 140000, 165000,
         195000, 225000, 265000, 305000, 355000
     )
-
-    level = 0
-
-    for leveling_point in leveling_points:
-        if xp >= leveling_point:
-            level += 1
-        else:
-            break
-
-    new_char_data["level"] = level
-    return new_char_data
+    leveling_info = [1 if xp >= lp else 0 for lp in leveling_points]
+    return sum(leveling_info)
 
 
-def add_prof_bonus(char_data: CharData) -> CharData:
-    assert "level" in char_data.keys()
-    new_char_data = deepcopy(char_data)
-    level = new_char_data["level"]
-    prof_bonus = 2
-
-    prof_bonus_gaining_levels = (5, 9, 13, 17)
-
-    for prof_gaining_level in prof_bonus_gaining_levels:
-        if level >= prof_gaining_level:
-            prof_bonus += 1
-        else:
-            break
-
-    new_char_data["prof_bonus"] = prof_bonus
-    return new_char_data
+def calc_prof_bonus(level: int) -> int:
+    initial_prof = 2
+    prof_gaining_levels = (5, 9, 13, 17)
+    prof_gaining_info = [1 if level >= pgl else 0 for pgl in prof_gaining_levels]
+    return initial_prof + sum(prof_gaining_info)
 
 
-def add_ability_modifiers(char_data: CharData) -> CharData:
-    ability_score_keys = ("str", "dex", "con", "int", "wis", "cha")
-    for ability_score in ability_score_keys:
-        assert ability_score in char_data["abilities"].keys()
-    new_char_data = deepcopy(char_data)
-    ability_scores = char_data["abilities"]
-
-    def calc_modifier(ability_score: int) -> int:
-        from math import floor
-        return floor((ability_score - 10) / 2)
-
-    for score_key in ability_score_keys:
-        modifier_key = score_key + "_modifier"
-        ability_score = ability_scores[score_key]
-        modifier = calc_modifier(ability_score)
-        new_char_data[modifier_key] = modifier
-
-    return new_char_data
-
-
-def add_saving_throws(char_data: CharData) -> CharData:
-    # as = ability scores
-    as_keys = ("str", "dex", "con", "int", "wis", "cha")
-    mod_keys = tuple([key + "_modifier" for key in as_keys])
-    saving_throw_keys = tuple([key + "_saving_throw" for key in as_keys])
-
-    for key in mod_keys:
-        assert key in char_data.keys()
-    new_char_data = deepcopy(char_data)
-
-    for i in range(len(as_keys)):
-        mod_key = mod_keys[i]
-        saving_throw_key = saving_throw_keys[i]
-        new_char_data[saving_throw_key] = \
-            new_char_data[mod_key]
-
-    char_class = new_char_data["character_class"]
-    bonus_stats = char_class.saving_throw_bonuses
-    prof_bonus = new_char_data["prof_bonus"]
-
-    for stat in bonus_stats:
-        saving_throw_key = stat + "_saving_throw"
-        new_char_data[saving_throw_key] += prof_bonus
-
-    return new_char_data
-
-
-def add_skills(char_data: CharData) -> CharData:
-    as_keys = ("str", "dex", "con", "int", "wis", "cha")
-    mod_keys = tuple([key + "_modifier" for key in as_keys])
-
-    skills = (
-        ("acrobatics", "dex"),
-        ("animal_handling", "wis"),
-        ("arcana", "int"),
-        ("athletics", "str"),
-        ("deception", "cha"),
-        ("history", "int"),
-        ("insight", "wis"),
-        ("intimidation", "cha"),
-        ("investigation", "int"),
-        ("medicine", "wis"),
-        ("nature", "int"),
-        ("perception", "wis"),
-        ("performance", "cha"),
-        ("persuasion", "cha"),
-        ("religion", "int"),
-        ("sleight_of_hand", "dex"),
-        ("stealth", "dex"),
-        ("survival", "wis")
+def calc_ability_modifier(ability_scores: AbilityScores) -> AbilityModifiers:
+    def calc_mod(ability_score: int) -> int:
+        return (ability_score - 10) // 2
+    return AbilityModifiers(
+        str=calc_mod(ability_scores.str),
+        dex=calc_mod(ability_scores.dex),
+        con=calc_mod(ability_scores.con),
+        int=calc_mod(ability_scores.int),
+        wis=calc_mod(ability_scores.wis),
+        cha=calc_mod(ability_scores.cha)
     )
 
-    for key in mod_keys:
-        assert key in char_data.keys()
-    assert "skill_profs" in char_data.keys()
-    assert "prof_bonus" in char_data.keys()
-    new_char_data = deepcopy(char_data)
 
-    char_skills = {}
+def calc_saving_throws(
+    ability_mods: AbilityModifiers,
+    char_class: CharacterClass,
+    prof_bonus: int
+) -> SavingThrows:
+    saving_throws = char_class.saving_throw_bonuses
 
-    for skill, ability in skills:
-        ability_mod_key = ability + "_modifier"
-        char_skills[skill] = new_char_data[ability_mod_key]
+    def calc_saving_throw(ability_mod: int, ability: str):
+        if ability in saving_throws:
+            return ability_mod + prof_bonus
+        else:
+            return ability_mod
 
-    skill_profs = new_char_data["skill_profs"]
-    prof_bonus = new_char_data["prof_bonus"]
+    return SavingThrows(
+        str=calc_saving_throw(ability_mods.str, "str"),
+        dex=calc_saving_throw(ability_mods.dex, "dex"),
+        con=calc_saving_throw(ability_mods.con, "con"),
+        int=calc_saving_throw(ability_mods.int, "int"),
+        wis=calc_saving_throw(ability_mods.wis, "wis"),
+        cha=calc_saving_throw(ability_mods.cha, "cha"),
+    )
 
-    for skill_prof in skill_profs:
-        char_skills[skill_prof] += prof_bonus
 
-    new_char_data["skills"] = char_skills
+def calc_skills(
+    ability_mods: AbilityModifiers,
+    skill_profs: tuple,
+    prof_bonus: int
+) -> SkillScores:
 
-    return new_char_data
+    def calc_skill(ability_mod: int, skill: str):
+        if skill in skill_profs:
+            return ability_mod + prof_bonus
+        else:
+            return ability_mod
+
+    return SkillScores(
+        acrobatics=calc_skill(ability_mods.dex, "acrobatics"),
+        animal_handling=calc_skill(ability_mods.wis, "animal_handling"),
+        arcana=calc_skill(ability_mods.int, "arcana"),
+        athletics=calc_skill(ability_mods.str, "athletics"),
+        deception=calc_skill(ability_mods.cha, "deception"),
+        history=calc_skill(ability_mods.int, "history"),
+        insight=calc_skill(ability_mods.wis, "insight"),
+        intimidation=calc_skill(ability_mods.cha, "intimidation"),
+        investigation=calc_skill(ability_mods.int, "investigation"),
+        medicine=calc_skill(ability_mods.wis, "medicine"),
+        nature=calc_skill(ability_mods.int, "nature"),
+        perception=calc_skill(ability_mods.wis, "perception"),
+        performance=calc_skill(ability_mods.cha, "performance"),
+        persuasion=calc_skill(ability_mods.cha, "persuasion"),
+        religion=calc_skill(ability_mods.int, "religion"),
+        sleight_of_hand=calc_skill(ability_mods.dex, "sleight_of_hand"),
+        stealth=calc_skill(ability_mods.dex, "stealth"),
+        survival=calc_skill(ability_mods.wis, "survival")
+    )
 
 
-def build_character(char_data: CharData) -> CharData:
-    return pipe(
-        char_data,
-        add_level,
-        add_prof_bonus,
-        add_ability_modifiers,
-        add_saving_throws,
-        add_skills
-        # todo
+def build_character(init_char_data: InitialCharacterData) -> CharacterData:
+    level =\
+        calc_level(init_char_data.experience_points)
+    prof_bonus =\
+        calc_prof_bonus(level)
+    ability_modifiers =\
+        calc_ability_modifier(init_char_data.ability_scores)
+    saving_throws =\
+        calc_saving_throws(ability_modifiers, init_char_data.character_class, prof_bonus)
+    skills =\
+        calc_skills(ability_modifiers, init_char_data.skill_profs, prof_bonus)
+
+    return CharacterData(
+        init_char_data.name,
+        init_char_data.character_class,
+        init_char_data.ability_scores,
+        init_char_data.experience_points,
+        init_char_data.skill_profs,
+        level,
+        prof_bonus,
+        ability_modifiers,
+        saving_throws,
+        skills
     )
 
 
 if __name__ == '__main__':
+    initial_char_data = InitialCharacterData(
+        name="Midnight",
+        character_class=bard,
+        ability_scores=AbilityScores(15, 10, 10, 10, 10, 10),
+        experience_points=0,
+        skill_profs=("acrobatics", "arcana", "deception")
+    )
+    char_data = build_character(initial_char_data)
     from pprint import pprint
-    pprint(build_character(character_data))
+    pprint(char_data._asdict())
