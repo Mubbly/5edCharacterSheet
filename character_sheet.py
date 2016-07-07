@@ -2,9 +2,6 @@ from character_classes import *
 from collections import namedtuple
 
 
-ABILITIES = ("str", "dex", "con", "int", "wis", "cha")
-
-
 InitialCharacterData = namedtuple(
     "InitialCharacterData",
     [
@@ -36,19 +33,19 @@ CharacterData = namedtuple(
 
 AbilityScores = namedtuple(
     "AbilityScores",
-    ABILITIES
+    ["str", "dex", "con", "int", "wis", "cha"]
 )
 
 
 AbilityModifiers = namedtuple(
     "AbilityModifiers",
-    ABILITIES
+    ["str", "dex", "con", "int", "wis", "cha"]
 )
 
 
 SavingThrows = namedtuple(
     "SavingThrows",
-    ABILITIES
+    ["str", "dex", "con", "int", "wis", "cha"]
 )
 
 
